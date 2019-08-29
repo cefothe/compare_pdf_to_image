@@ -16,6 +16,13 @@ The last step of set up project is to install all required libraries:
 ```
 If you are Linux user please execute those commands with sudo
 
+### Required application that our PC need to have
+
+1) **oppler-utils**
+    Windows users will have to install poppler for Windows, then add the bin/ folder to PATH.
+    Mac users will have to install poppler for Mac.
+    Linux users will have both tools pre-installed with Ubuntu 16.04+ and Archlinux. If it's not, run `sudo apt install poppler-utils`
+
 ## Technologies
    - Python 3.6
    - OpenCV
