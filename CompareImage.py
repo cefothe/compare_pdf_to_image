@@ -52,56 +52,71 @@ def compare_histograms(first_image, second_image):
     print("Result of comparing " + str(histogram))
 
 
+'''
+    Find matching points with SIFT algorithm and return best matching points 
+'''
+
+
+def find_matching_points_with_sift(first_image, second_image):
+    sift = cv2.xfeatures2d.SIFT_create()
+
+    keypoints, descriptor = sift.detectAndCompute(first_image, None)
+    keypoints2, descriptor2 = sift.detectAndCompute(second_image, None)
+
+    index_param = dict(algorithm=0, trees=5)
+    search_param = dict()
+    flan = cv2.FlannBasedMatcher(index_param, search_param)
+
+    matches = flan.knnMatch(descriptor, descriptor2, k=2)
+
+    # Initialize lists
+    list_kp1 = []
+    list_kp2 = []
+
+    good_points = []
+    for m, n in matches:
+        if m.distance < 0.2 * n.distance:
+            good_points.append(m)
+            # Get the matching keypoints for each of the images
+            img1_idx = m.queryIdx
+            img2_idx = m.trainIdx
+
+            # x - columns
+            # y - rows
+            # Get the coordinates
+            (x1, y1) = keypoints[img1_idx].pt
+            (x2, y2) = keypoints2[img2_idx].pt
+
+            # Append to each list
+            list_kp1.append((x1, y1))
+            list_kp2.append((x2, y2))
+
+    result = cv2.drawMatches(img, keypoints, img2, keypoints2, good_points, None)
+    cv2.imshow("Result", cv2.resize(result, None, fx=0.2, fy=0.2))
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    return good_points, list_kp1, list_kp2
+
+
+
+
+
 img = cv2.imread("hacker4e.jpg")
 img2 = cv2.imread("warped.jpg")
-sift = cv2.xfeatures2d.SIFT_create()
 
-keypoints, descriptor = sift.detectAndCompute(img, None)
-keypoints2, descriptor2 = sift.detectAndCompute(img2, None)
 
-index_param = dict(algorithm=0, trees=5)
-search_param = dict();
-flan = cv2.FlannBasedMatcher(index_param, search_param)
+sift_points = find_matching_points_with_sift(img, img2);
 
-matches = flan.knnMatch(descriptor, descriptor2, k=2);
+print(len(sift_points[0]))
+print(sift_points[1])
+print(sift_points[2])
 
-# Initialize lists
-list_kp1 = []
-list_kp2 = []
+print(len(sift_points[1]))
+print(len(sift_points[2]))
 
-good_points = []
-for m, n in matches:
-    if m.distance < 0.2 * n.distance:
-        good_points.append(m)
-        # Get the matching keypoints for each of the images
-        img1_idx = m.queryIdx
-        img2_idx = m.trainIdx
-
-        # x - columns
-        # y - rows
-        # Get the coordinates
-        (x1, y1) = keypoints[img1_idx].pt
-        (x2, y2) = keypoints2[img2_idx].pt
-
-        # Append to each list
-        list_kp1.append((x1, y1))
-        list_kp2.append((x2, y2))
-
-result = cv2.drawMatches(img, keypoints, img2, keypoints2, good_points, None)
-cv2.imshow("Result", cv2.resize(result, None, fx=0.2, fy=0.2))
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-print(len(good_points))
-print(list_kp1)
-print(list_kp2)
-
-print(len(list_kp1))
-print(len(list_kp2))
-
-for index in range(len(list_kp1)):
-    print(index, list_kp1[index][0] / list_kp2[index][0])
-    print(index, list_kp1[index][1] / list_kp2[index][1])
+for index in range(len(sift_points[1])):
+    print(index, sift_points[1][index][0] / sift_points[2][index][0])
+    print(index, sift_points[1][index][1] / sift_points[2][index][1])
     print("-----------------------------")
 
 resized_image = cv2.resize(img2, None, fx=0.53, fy=0.52)
@@ -117,7 +132,6 @@ height, width, channels = resized_image.shape
 resized_image = cv2.resize(img2, (1166, 1654))
 
 cv2.imwrite("rezized.jpg", resized_image)
-
 img_new = cv2.imread("hacker4e.jpg")
 img2_new = cv2.imread("rezized.jpg")
 
